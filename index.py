@@ -11,12 +11,12 @@ async def welcome(request):
         "version": "2.0.0",
         "status": "healthy",
         "endpoints": {
-            "health": "/api/health",
-            "mcp": "/api/mcp",
-            "api_test": "/api/"
+            "health": "/health",
+            "mcp_server": "/api/",
+            "api_docs": "Use POST /api/ for MCP calls"
         },
         "usage": "This is a Model Context Protocol (MCP) server for Korean government procurement data.",
-        "documentation": "https://github.com/your-repo/naramarketmcp"
+        "github": "https://github.com/your-repo/naramarketmcp"
     })
 
 async def health_check(request):
@@ -26,14 +26,15 @@ async def health_check(request):
         "server": "naramarket-mcp-vercel",
         "version": "2.0.0",
         "transport": "HTTP",
-        "deployment": "vercel"
+        "deployment": "vercel",
+        "timestamp": "2024-10-03"
     })
 
 # Create Starlette app for root routes
 app = Starlette(routes=[
-    Route("/", welcome),
-    Route("/health", health_check),
+    Route("/", welcome, methods=["GET"]),
+    Route("/health", health_check, methods=["GET"]),
 ])
 
-# Export for Vercel
-handler = app
+# This is the ASGI application that Vercel will call
+# No need for handler = app, just export app directly

@@ -1,10 +1,28 @@
 {
   "functions": {
+    "index.py": {
+      "runtime": "@vercel/python@4.3.0",
+      "maxDuration": 30
+    },
     "api/index.py": {
       "runtime": "@vercel/python@4.3.0",
       "maxDuration": 30
     }
   },
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "/index.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/",
+      "dest": "/index.py"
+    }
+  ],
   "env": {
     "FASTMCP_TRANSPORT": "http",
     "FASTMCP_HOST": "0.0.0.0",

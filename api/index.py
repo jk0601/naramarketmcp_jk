@@ -11,11 +11,6 @@ class handler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
         
-        # Set CORS headers
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', '*')
-        
         # Route handling
         if path == '/' or path == '':
             self.handle_root()
@@ -32,6 +27,7 @@ class handler(BaseHTTPRequestHandler):
         """Root endpoint."""
         self.send_response(200)
         self.send_header('Content-Type', 'text/plain; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         response = """🚀 Naramarket MCP Server (Vercel Standard Handler)
@@ -54,6 +50,7 @@ This is working with Vercel's standard Python handler format.
         """Health check endpoint."""
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         health_data = {
@@ -72,6 +69,7 @@ This is working with Vercel's standard Python handler format.
         """System info endpoint."""
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         info_data = {
@@ -96,6 +94,7 @@ This is working with Vercel's standard Python handler format.
         """Test endpoint."""
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         test_data = {
@@ -113,6 +112,7 @@ This is working with Vercel's standard Python handler format.
         """404 handler."""
         self.send_response(404)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         error_data = {

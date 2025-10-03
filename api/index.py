@@ -1,134 +1,79 @@
-"""Vercel deployment entry point for Naramarket MCP Server."""
+"""Simple Vercel deployment entry point for debugging."""
 
 import os
 import sys
-import logging
-from pathlib import Path
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
-# Configure logging for Vercel
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("vercel-mcp")
+async def welcome(request):
+    """Welcome page for root path."""
+    return JSONResponse({
+        "message": "🚀 Naramarket MCP Server (Debug Version)",
+        "version": "2.0.0-debug",
+        "status": "healthy",
+        "deployment": "vercel",
+        "endpoints": {
+            "health": "/health",
+            "debug": "/debug",
+            "test": "/test"
+        }
+    })
 
-# Add the src directory to Python path
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
+async def health_check(request):
+    """Health check endpoint."""
+    return JSONResponse({
+        "status": "healthy",
+        "server": "naramarket-mcp-vercel-debug",
+        "version": "2.0.0",
+        "transport": "HTTP",
+        "deployment": "vercel",
+        "environment": {
+            "api_key_configured": bool(os.environ.get('NARAMARKET_SERVICE_KEY')),
+            "transport_mode": os.environ.get('FASTMCP_TRANSPORT', 'not_set'),
+            "port": os.environ.get('PORT', 'not_set')
+        }
+    })
 
-# Set environment variables for Vercel deployment
-os.environ.setdefault("FASTMCP_TRANSPORT", "http")
-os.environ.setdefault("FASTMCP_HOST", "0.0.0.0")
-os.environ.setdefault("PORT", "8000")
-
-try:
-    # Import FastMCP and create MCP instance
-    from fastmcp import FastMCP
-    from core.config import APP_NAME
-    from tools.naramarket import naramarket_tools
-    from tools.enhanced_tools import enhanced_tools
+async def debug_info(request):
+    """Debug information."""
+    try:
+        files_list = os.listdir('.')
+    except Exception as ex:
+        files_list = [f"Error listing files: {str(ex)}"]
     
-    logger.info("🚀 Initializing MCP for Vercel...")
-    
-    # Create FastMCP instance (same as main.py but without running)
-    mcp = FastMCP(APP_NAME)
-    
-    # Register all tools (copy from main.py)
-    @mcp.tool(name="server_info", description="Get server status and available tools list")
-    def server_info():
-        return naramarket_tools.server_info()
-    
-    @mcp.tool(name="get_recent_bid_announcements", description="최근 입찰공고 조회")
-    def get_recent_bid_announcements(num_rows: int = 5, days_back: int = 7):
-        from datetime import datetime, timedelta
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-        return enhanced_tools.call_public_data_standard_api(
-            operation="getDataSetOpnStdBidPblancInfo",
-            numOfRows=num_rows,
-            pageNo=1,
-            bidNtceBgnDt=start_date.strftime("%Y%m%d0000"),
-            bidNtceEndDt=end_date.strftime("%Y%m%d2359")
-        )
-    
-    @mcp.tool(name="search_shopping_mall_products", description="나라장터 쇼핑몰 제품 검색")
-    def search_shopping_mall_products(product_name: str = None, company_name: str = None, num_rows: int = 5):
-        kwargs = {}
-        if product_name:
-            kwargs["prdctClsfcNoNm"] = product_name
-        if company_name:
-            kwargs["cntrctCorpNm"] = company_name
-        return enhanced_tools.call_shopping_mall_api(
-            operation="getMASCntrctPrdctInfoList",
-            numOfRows=num_rows,
-            pageNo=1,
-            **kwargs
-        )
-    
-    # Create HTTP app for Vercel
-    app = mcp.http_app()
-    
-    # Add welcome and health routes
-    from starlette.routing import Route
-    from starlette.responses import JSONResponse
-    
-    async def welcome(request):
-        return JSONResponse({
-            "message": "🚀 Naramarket MCP Server is running on Vercel!",
-            "version": "2.0.0",
-            "status": "healthy",
-            "endpoints": {
-                "health": "/health",
-                "mcp": "/mcp",
-                "tools": "15 government procurement tools available"
+    return JSONResponse({
+        "debug_info": {
+            "python_version": sys.version,
+            "working_directory": os.getcwd(),
+            "environment_variables": {
+                "FASTMCP_TRANSPORT": os.environ.get('FASTMCP_TRANSPORT'),
+                "FASTMCP_HOST": os.environ.get('FASTMCP_HOST'),
+                "PORT": os.environ.get('PORT'),
+                "API_KEY_SET": "Yes" if os.environ.get('NARAMARKET_SERVICE_KEY') else "No"
             },
-            "usage": "This is a Model Context Protocol (MCP) server for Korean government procurement data.",
-            "github": "https://github.com/your-repo/naramarketmcp"
-        })
-    
-    async def health_check(request):
-        return JSONResponse({
-            "status": "healthy",
-            "server": "naramarket-mcp-vercel",
-            "version": "2.0.0",
-            "transport": "HTTP",
-            "deployment": "vercel",
-            "tools_available": 15,
-            "api_key_configured": bool(os.environ.get('NARAMARKET_SERVICE_KEY'))
-        })
-    
-    # Add routes to existing app
-    app.routes.insert(0, Route("/", welcome, methods=["GET"]))
-    app.routes.insert(1, Route("/health", health_check, methods=["GET"]))
-    
-    logger.info("✅ MCP HTTP app created for Vercel")
-    
-except Exception as e:
-    logger.error(f"❌ Failed to initialize MCP: {e}")
-    # Fallback simple app
-    from starlette.applications import Starlette
-    from starlette.responses import JSONResponse
-    from starlette.routing import Route
-    
-    async def health_check(request):
-        return JSONResponse({
-            "status": "error",
-            "message": f"MCP initialization failed: {str(e)}",
-            "server": "naramarket-mcp-vercel",
-            "version": "2.0.0"
-        }, status_code=500)
-    
-    async def fallback_handler(request):
-        return JSONResponse({
-            "error": "MCP Server not available",
-            "message": str(e),
-            "endpoints": {
-                "health": "/health"
-            }
-        }, status_code=500)
-    
-    app = Starlette(routes=[
-        Route("/health", health_check),
-        Route("/", fallback_handler),
-        Route("/{path:path}", fallback_handler)
-    ])
+            "files_in_root": files_list[:10],
+            "python_path": sys.path[:3]
+        }
+    })
 
-# Export the ASGI app for Vercel
-# Vercel will call this app for each request
+async def test_endpoint(request):
+    """Test endpoint to verify basic functionality."""
+    return JSONResponse({
+        "test": "success",
+        "message": "Basic Starlette app is working!",
+        "request_method": request.method,
+        "request_url": str(request.url)
+    })
+
+# Create Starlette application
+app = Starlette(
+    routes=[
+        Route("/", welcome, methods=["GET"]),
+        Route("/health", health_check, methods=["GET"]),
+        Route("/debug", debug_info, methods=["GET"]),
+        Route("/test", test_endpoint, methods=["GET"]),
+    ]
+)
+
+# This is the ASGI app that Vercel will use

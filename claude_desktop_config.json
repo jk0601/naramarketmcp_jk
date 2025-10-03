@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "naramarket-vercel": {
+      "command": "python",
+      "args": [
+        "D:\\j\\cursor\\naramarketmcp-main\\mcp_bridge.py",
+        "https://your-project.vercel.app/mcp"
+      ],
+      "env": {
+        "PYTHONPATH": "D:\\j\\cursor\\naramarketmcp-main"
+      }
+    }
+  }
+}

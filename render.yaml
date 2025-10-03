@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: naramarket-mcp-server
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.main
+    envVars:
+      - key: FASTMCP_TRANSPORT
+        value: http
+      - key: FASTMCP_HOST
+        value: 0.0.0.0
+      - key: PORT
+        fromService:
+          type: web
+          name: naramarket-mcp-server
+          property: port
+      - key: NARAMARKET_SERVICE_KEY
+        sync: false  # This will be set manually in Render dashboard
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: naramarket-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1

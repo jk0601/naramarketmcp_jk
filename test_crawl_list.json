@@ -1,0 +1,11 @@
+{
+  "method": "tools/call",
+  "params": {
+    "name": "crawl_list",
+    "arguments": {
+      "category": "데스크톱컴퓨터",
+      "num_rows": 3,
+      "days_back": 7
+    }
+  }
+}

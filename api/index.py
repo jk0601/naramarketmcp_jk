@@ -65,23 +65,38 @@ try:
     # Create HTTP app for Vercel
     app = mcp.http_app()
     
-    # Add welcome route for root path
+    # Add welcome and health routes
     from starlette.routing import Route
     from starlette.responses import JSONResponse
     
     async def welcome(request):
         return JSONResponse({
-            "message": "🚀 Naramarket MCP Server (Vercel)",
-            "status": "running",
+            "message": "🚀 Naramarket MCP Server is running on Vercel!",
+            "version": "2.0.0",
+            "status": "healthy",
             "endpoints": {
                 "health": "/health",
                 "mcp": "/mcp",
-                "api": "/api"
-            }
+                "tools": "15 government procurement tools available"
+            },
+            "usage": "This is a Model Context Protocol (MCP) server for Korean government procurement data.",
+            "github": "https://github.com/your-repo/naramarketmcp"
+        })
+    
+    async def health_check(request):
+        return JSONResponse({
+            "status": "healthy",
+            "server": "naramarket-mcp-vercel",
+            "version": "2.0.0",
+            "transport": "HTTP",
+            "deployment": "vercel",
+            "tools_available": 15,
+            "api_key_configured": bool(os.environ.get('NARAMARKET_SERVICE_KEY'))
         })
     
     # Add routes to existing app
-    app.routes.insert(0, Route("/", welcome))
+    app.routes.insert(0, Route("/", welcome, methods=["GET"]))
+    app.routes.insert(1, Route("/health", health_check, methods=["GET"]))
     
     logger.info("✅ MCP HTTP app created for Vercel")
     

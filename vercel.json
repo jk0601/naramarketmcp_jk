@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/index.py": {
+    "api/main.py": {
       "runtime": "@vercel/python@4.3.0",
       "maxDuration": 30
     }
@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/api/main.py"
     }
   ],
   "env": {
